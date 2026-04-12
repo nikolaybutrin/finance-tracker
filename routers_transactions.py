@@ -1,3 +1,5 @@
+"""Transactions router: CRUD endpoints for the authenticated user's transactions."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -16,6 +18,7 @@ def create_transaction(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> TransactionResponse:
+    """Create a transaction for the current user in one of their categories."""
     category = crud.get_category(db, data.category_id, current_user.id)
     if category is None:
         raise HTTPException(
@@ -30,6 +33,7 @@ def list_transactions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[TransactionResponse]:
+    """Return all transactions owned by the current user."""
     return crud.get_transactions(db, user_id=current_user.id)
 
 
@@ -39,6 +43,7 @@ def get_transaction(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> TransactionResponse:
+    """Return one of the current user's transactions, or 404 if not found."""
     transaction = crud.get_transaction(db, transaction_id, current_user.id)
     if transaction is None:
         raise HTTPException(
@@ -54,6 +59,7 @@ def update_transaction(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> TransactionResponse:
+    """Partially update one of the current user's transactions."""
     if data.category_id is not None:
         category = crud.get_category(db, data.category_id, current_user.id)
         if category is None:
@@ -75,6 +81,7 @@ def delete_transaction(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> None:
+    """Delete one of the current user's transactions."""
     if not crud.delete_transaction(db, transaction_id, current_user.id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
