@@ -1,3 +1,11 @@
+"""FastAPI application entry point.
+
+Wires the authentication, categories, transactions and analytics routers
+into a single ``app`` instance that can be served with uvicorn:
+
+    uvicorn main:app --reload
+"""
+
 from fastapi import FastAPI
 
 from auth import router as auth_router
