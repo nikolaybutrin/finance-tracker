@@ -1,3 +1,10 @@
+"""Analytics router: budget planning based on historical transactions.
+
+Exposes ``GET /analytics/budget-plan`` which aggregates the authenticated
+user's transactions over a configurable window and suggests a next-month
+budget per category using a weighted moving average.
+"""
+
 from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
@@ -17,6 +24,8 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 # --- Response schemas ---
 
 class CategoryBudgetPlan(BaseModel):
+    """Per-category analytics summary and suggested next-month budget."""
+
     category_id: int
     category_name: str
     monthly_totals: list[Decimal]  # oldest -> newest
@@ -27,6 +36,8 @@ class CategoryBudgetPlan(BaseModel):
 
 
 class BudgetPlanResponse(BaseModel):
+    """Aggregated budget-plan response covering all active categories."""
+
     months_analyzed: int
     period_start: date
     period_end: date
@@ -38,23 +49,33 @@ class BudgetPlanResponse(BaseModel):
 # --- Helpers ---
 
 def _shift_months(year: int, month: int, delta: int) -> tuple[int, int]:
+    """Return ``(year, month)`` shifted by ``delta`` whole months."""
     idx = year * 12 + (month - 1) + delta
     return idx // 12, idx % 12 + 1
 
 
 def _q(value: Decimal) -> Decimal:
+    """Quantize a Decimal to two fractional digits for monetary output."""
     return value.quantize(Decimal("0.01"))
 
 
 # --- Endpoint ---
 
 @router.get("/budget-plan", response_model=BudgetPlanResponse)
+# pylint: disable=too-many-locals
 def budget_plan(
     months: int = Query(3, ge=2, le=12, description="Number of past months to analyze"),
     transaction_type: str = Query("expense", pattern="^(expense|income)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> BudgetPlanResponse:
+    """Compute per-category averages, trend and suggested next-month budget.
+
+    Fetches the authenticated user's transactions of the requested type
+    over the last ``months`` months, groups them by ``(category, month)``,
+    and returns a weighted-moving-average budget recommendation together
+    with a rising/falling/stable trend marker per category.
+    """
     # 1. Build the month window [oldest -> current], inclusive
     today = datetime.now()
     start_year, start_month = _shift_months(today.year, today.month, -(months - 1))
