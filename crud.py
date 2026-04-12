@@ -1,3 +1,9 @@
+"""CRUD operations for Category and Transaction models.
+
+All functions are scoped by ``user_id`` so that a caller can only access
+resources belonging to the authenticated user.
+"""
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,6 +20,7 @@ from schemas import (
 
 
 def create_category(db: Session, user_id: int, data: CategoryCreate) -> Category:
+    """Create a new category owned by the given user."""
     category = Category(name=data.name, user_id=user_id)
     db.add(category)
     db.commit()
@@ -22,11 +29,13 @@ def create_category(db: Session, user_id: int, data: CategoryCreate) -> Category
 
 
 def get_categories(db: Session, user_id: int) -> list[Category]:
+    """Return all categories belonging to the given user."""
     stmt = select(Category).where(Category.user_id == user_id)
     return list(db.scalars(stmt).all())
 
 
 def get_category(db: Session, category_id: int, user_id: int) -> Category | None:
+    """Return the user's category by id, or None if not found."""
     stmt = select(Category).where(
         Category.id == category_id, Category.user_id == user_id
     )
@@ -36,6 +45,7 @@ def get_category(db: Session, category_id: int, user_id: int) -> Category | None
 def update_category(
     db: Session, category_id: int, user_id: int, data: CategoryUpdate
 ) -> Category | None:
+    """Partially update a user's category; return the updated row or None."""
     category = get_category(db, category_id, user_id)
     if category is None:
         return None
@@ -47,6 +57,7 @@ def update_category(
 
 
 def delete_category(db: Session, category_id: int, user_id: int) -> bool:
+    """Delete a user's category; return True if a row was removed."""
     category = get_category(db, category_id, user_id)
     if category is None:
         return False
@@ -61,6 +72,7 @@ def delete_category(db: Session, category_id: int, user_id: int) -> bool:
 def create_transaction(
     db: Session, user_id: int, data: TransactionCreate
 ) -> Transaction:
+    """Create a new transaction owned by the given user."""
     transaction = Transaction(
         amount=data.amount,
         description=data.description,
@@ -75,6 +87,7 @@ def create_transaction(
 
 
 def get_transactions(db: Session, user_id: int) -> list[Transaction]:
+    """Return all transactions belonging to the given user."""
     stmt = select(Transaction).where(Transaction.user_id == user_id)
     return list(db.scalars(stmt).all())
 
@@ -82,6 +95,7 @@ def get_transactions(db: Session, user_id: int) -> list[Transaction]:
 def get_transaction(
     db: Session, transaction_id: int, user_id: int
 ) -> Transaction | None:
+    """Return the user's transaction by id, or None if not found."""
     stmt = select(Transaction).where(
         Transaction.id == transaction_id, Transaction.user_id == user_id
     )
@@ -91,6 +105,7 @@ def get_transaction(
 def update_transaction(
     db: Session, transaction_id: int, user_id: int, data: TransactionUpdate
 ) -> Transaction | None:
+    """Partially update a user's transaction; return the updated row or None."""
     transaction = get_transaction(db, transaction_id, user_id)
     if transaction is None:
         return None
@@ -105,6 +120,7 @@ def update_transaction(
 
 
 def delete_transaction(db: Session, transaction_id: int, user_id: int) -> bool:
+    """Delete a user's transaction; return True if a row was removed."""
     transaction = get_transaction(db, transaction_id, user_id)
     if transaction is None:
         return False
