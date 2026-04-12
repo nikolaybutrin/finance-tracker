@@ -41,7 +41,8 @@ def get_category(
     category = crud.get_category(db, category_id, current_user.id)
     if category is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Category not found or does not belong to the current user",
         )
     return category
 
@@ -57,7 +58,8 @@ def update_category(
     category = crud.update_category(db, category_id, current_user.id, data)
     if category is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Category not found or does not belong to the current user",
         )
     return category
 
@@ -71,5 +73,6 @@ def delete_category(
     """Delete one of the current user's categories."""
     if not crud.delete_category(db, category_id, current_user.id):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Category not found or does not belong to the current user",
         )
