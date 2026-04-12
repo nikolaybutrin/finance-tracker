@@ -1,3 +1,5 @@
+"""Categories router: CRUD endpoints for the authenticated user's categories."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -16,6 +18,7 @@ def create_category(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CategoryResponse:
+    """Create a new category owned by the current user."""
     return crud.create_category(db, user_id=current_user.id, data=data)
 
 
@@ -24,6 +27,7 @@ def list_categories(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[CategoryResponse]:
+    """Return all categories owned by the current user."""
     return crud.get_categories(db, user_id=current_user.id)
 
 
@@ -33,6 +37,7 @@ def get_category(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CategoryResponse:
+    """Return a single category by id, or 404 if it does not belong to the user."""
     category = crud.get_category(db, category_id, current_user.id)
     if category is None:
         raise HTTPException(
@@ -48,6 +53,7 @@ def update_category(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CategoryResponse:
+    """Partially update one of the current user's categories."""
     category = crud.update_category(db, category_id, current_user.id, data)
     if category is None:
         raise HTTPException(
@@ -62,6 +68,7 @@ def delete_category(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> None:
+    """Delete one of the current user's categories."""
     if not crud.delete_category(db, category_id, current_user.id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
